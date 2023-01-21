@@ -82,7 +82,7 @@ with ThreadPoolExecutor(100) as executor:
                 pass
             except TypeError:
                 pass
-            progress_bar.set_description(f"Successfull: {success_count}")
+            progress_bar.set_description(f"Successful: {success_count}")
             progress_bar.update()
         progress_bar.close()
         output_list = list(OrderedDict.fromkeys(output_list))
