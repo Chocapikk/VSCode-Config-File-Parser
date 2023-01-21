@@ -37,7 +37,9 @@ with open(args.input_file, "r") as input_file:
             line += "/.vscode/sftp.json"
         urls.append(line)
 
-progress_bar = tqdm(total=len(urls), unit=' URL', bar_format='\033[32m{l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed:{elapsed}, remaining:{remaining} {rate_fmt}]\033[0m')
+success_count = 0
+progress_bar = tqdm(total=len(urls), unit=' URL', bar_format='\033[32m{l_bar}{bar}| {n_fmt}/{total_fmt} [Elapsed: {elapsed}, Remaining: {remaining} {rate_fmt}]\033')
+
 
 output_list = []
 if args.file_format == "csv":
@@ -67,7 +69,7 @@ with ThreadPoolExecutor(100) as executor:
                 if response.status_code != 200:
                     pass
                 else:
-                    pass
+                    success_count += 1
                     #console.print(f"[bold red][✔️] {url} parsed")
                 json_response = response.text
                 name, host, protocol, port, username, remotePath, password, uploadOnSave = extract_info(json_response)
@@ -79,6 +81,7 @@ with ThreadPoolExecutor(100) as executor:
                 pass
             except TypeError:
                 pass
+            progress_bar.set_description(f"Successfull: {success_count}")
             progress_bar.update()
         progress_bar.close()
         output_list = list(set(output_list))
