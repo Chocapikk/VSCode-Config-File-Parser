@@ -4,6 +4,7 @@ import requests
 import argparse
 from tqdm import tqdm
 from rich.console import Console
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -68,15 +69,15 @@ with ThreadPoolExecutor(100) as executor:
                 response = future.result()
                 if response.status_code != 200:
                     pass
-                else:
-                    success_count += 1
-                    #console.print(f"[bold red][✔️] {url} parsed")
                 json_response = response.text
                 name, host, protocol, port, username, remotePath, password, uploadOnSave = extract_info(json_response)
                 if args.file_format == "combolist":
-                    output_list.append(f"{host}:{port} {username}:{password} {protocol}:{url}")
+                    line = f"{host}:{port} {username}:{password} {protocol}:{url}"
                 elif args.file_format == "csv":
-                    output_list.append(f"{name}, {host}, {protocol}, {port}, {username}, {remotePath}, {password}, {uploadOnSave}, {url}")
+                    line  = f"{name}, {host}, {protocol}, {port}, {username}, {remotePath}, {password}, {uploadOnSave}, {url}"
+                output_list.append(line)
+                if line in output_list:
+                    success_count += 1
             except requests.exceptions.RequestException:
                 pass
             except TypeError:
@@ -84,7 +85,7 @@ with ThreadPoolExecutor(100) as executor:
             progress_bar.set_description(f"Successfull: {success_count}")
             progress_bar.update()
         progress_bar.close()
-        output_list = list(set(output_list))
+        output_list = list(OrderedDict.fromkeys(output_list))
         with open(args.output_file, "w") as output_file:
             for item in output_list:
                 output_file.write(item + "\n")
