@@ -44,7 +44,7 @@ progress_bar = tqdm(total=len(urls), unit=' URL', bar_format='\033[32m{l_bar}{ba
 
 output_list = []
 if args.file_format == "csv":
-    output_list.append("url, name, host, protocol, port, username, remotePath, password, uploadOnSave")
+    output_list.append("url, name, host, port, protocol, username, password, remotePath, uploadOnSave")
 
 def extract_info(json_response):
     try:
@@ -74,7 +74,7 @@ with ThreadPoolExecutor(100) as executor:
                 if args.file_format == "combolist":
                     line = f"{host}:{port} {username}:{password} {protocol}:{url}"
                 elif args.file_format == "csv":
-                    line  = f"{name}, {host}, {protocol}, {port}, {username}, {remotePath}, {password}, {uploadOnSave}, {url}"
+                    line  = f"{url}, {name}, {host}, {port}, {protocol}, {username}, {password}, {remotePath}, {uploadOnSave}"
                 output_list.append(line)
                 if line in output_list:
                     success_count += 1
