@@ -10,18 +10,18 @@ paramiko.util.log_to_file('/dev/null')
 
 def check_ftp_connection(url, host, port, username, password):
     global output_file
-    ftp = FTP(timeout=10)
+    ftp = FTP(timeout=100)
     try:
         ftp.connect(host, int(port))
         ftp.login(user=username, passwd=password)
-        output_file.write(f"{url} : lftp -u {username},{password} -e 'echo Connection Successful; quit' {host}\n")
+        output_file.write(f"{url} : [{password}] ftp {username}@{host} -p {port}\n")
     except:
         pass
         try:
             host = socket.gethostbyname(url)
-            ftp.connect(host, port)
+            ftp.connect(host, int(port))
             ftp.login(user=username, passwd=password)
-            output_file.write(f"{url} : lftp -u {username},{password} -e \"echo Connection Successful; quit\" {host}\n")
+            output_file.write(f"{url} : [{password}] ftp {username}@{host} -p {port}\n")
         except:
             pass
     ftp.close()
@@ -31,13 +31,13 @@ def check_sftp_connection(url, host, port, username, password, remote_path):
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
-        ssh.connect(host, port=port, username=username, password=password, timeout=1)
-        output_file.write(f"{url} : [{password}] ssh {username}@{host} -P {port}\n")
+        ssh.connect(host, port=port, username=username, password=password, timeout=10)
+        output_file.write(f"{url} : [{password}] ssh {username}@{host} -p {port}\n")
     except:
         try:
             host = socket.gethostbyname(url)
-            ssh.connect(host, port=port, username=username, password=password)
-            output_file.write(f"{url} : [{password}] ssh {username}@{host} -P {port}\n")
+            ssh.connect(host, port=port, username=username, password=password, timeout=10)
+            output_file.write(f"{url} : [{password}] ssh {username}@{host} -p {port}\n")
         except:
             pass
     ssh.close()
